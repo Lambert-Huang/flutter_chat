@@ -5,6 +5,7 @@ import 'package:chat/screens/auth/Profile_Screen.dart';
 import 'package:chat/widgets/chat_user_card.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../api/apis.dart';
 import '../main.dart';
@@ -24,6 +25,25 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    API.updateActiveStatus(isOnline: true);
+    SystemChannels.lifecycle.setMessageHandler(
+      (message) async {
+        if (message == null) return Future.value(null);
+        if (API.currentUser != null) {
+          switch (message) {
+            case 'AppLifecycleState.paused':
+              await API.updateActiveStatus(isOnline: false);
+              break;
+            case 'AppLifecycleState.resumed':
+              await API.updateActiveStatus(isOnline: true);
+              break;
+            default:
+              break;
+          }
+        }
+        return Future.value(message);
+      },
+    );
   }
 
   @override

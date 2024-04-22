@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat/helper/date_util.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -54,7 +55,9 @@ class _MessageCardState extends State<MessageCard> {
         ),
         Flexible(
           child: Container(
-            padding: EdgeInsets.all(mq.width * .04),
+            padding: EdgeInsets.all(widget.message.type == MessageType.text
+                ? mq.width * .04
+                : mq.width * .03),
             margin: EdgeInsets.symmetric(
               horizontal: mq.width * .04,
               vertical: mq.height * .01,
@@ -78,13 +81,30 @@ class _MessageCardState extends State<MessageCard> {
                 ),
               ],
             ),
-            child: Text(
-              widget.message.msg,
-              style: const TextStyle(
-                fontSize: 15,
-                color: Colors.black87,
-              ),
-            ),
+            child: widget.message.type == MessageType.text
+                ? Text(
+                    widget.message.msg,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      color: Colors.black87,
+                    ),
+                  )
+                : ClipRRect(
+                    borderRadius: BorderRadius.circular(15),
+                    child: CachedNetworkImage(
+                      imageUrl: widget.message.msg,
+                      placeholder: (context, url) => const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => const Icon(
+                        Icons.image,
+                        size: 70,
+                      ),
+                    ),
+                  ),
           ),
         ),
       ],
@@ -101,7 +121,9 @@ class _MessageCardState extends State<MessageCard> {
       children: [
         Flexible(
           child: Container(
-            padding: EdgeInsets.all(mq.width * .04),
+            padding: EdgeInsets.all(widget.message.type == MessageType.text
+                ? mq.width * .04
+                : mq.width * .03),
             margin: EdgeInsets.symmetric(
               horizontal: mq.width * .04,
               vertical: mq.height * .01,
@@ -120,18 +142,35 @@ class _MessageCardState extends State<MessageCard> {
               boxShadow: [
                 BoxShadow(
                   color: Colors.lightBlue.withOpacity(.6),
-                  offset: Offset(1, 2),
+                  offset: const Offset(1, 2),
                   blurRadius: 4,
                 ),
               ],
             ),
-            child: Text(
-              widget.message.msg,
-              style: const TextStyle(
-                fontSize: 15,
-                color: Colors.black87,
-              ),
-            ),
+            child: widget.message.type == MessageType.text
+                ? Text(
+                    widget.message.msg,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      color: Colors.black87,
+                    ),
+                  )
+                : ClipRRect(
+                    borderRadius: BorderRadius.circular(15),
+                    child: CachedNetworkImage(
+                      imageUrl: widget.message.msg,
+                      placeholder: (context, url) => const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => const Icon(
+                        Icons.image,
+                        size: 70,
+                      ),
+                    ),
+                  ),
           ),
         ),
         Padding(

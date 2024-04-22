@@ -33,6 +33,30 @@ class _ChatUserCardState extends State<ChatUserCard> {
     log('Avatar: ${widget.user.image}');
   }
 
+  Widget? get _lastMessageSubtitle {
+    if (_lastMessage == null) {
+      return null;
+    }
+    return _lastMessage!.type == MessageType.image
+        ? Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: CachedNetworkImage(
+                  fit: BoxFit.fill,
+                  imageUrl: _lastMessage!.msg,
+                  width: 24,
+                  height: 24,
+                ),
+              ),
+            ],
+          )
+        : Text(
+            _lastMessage!.msg,
+            maxLines: 1,
+          );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -65,6 +89,7 @@ class _ChatUserCardState extends State<ChatUserCard> {
               leading: ClipRRect(
                 borderRadius: BorderRadius.circular(mq.height * .3),
                 child: CachedNetworkImage(
+                  fit: BoxFit.fill,
                   width: mq.height * .055,
                   height: mq.height * .055,
                   imageUrl: widget.user.image,
@@ -76,10 +101,7 @@ class _ChatUserCardState extends State<ChatUserCard> {
               title: Text(
                 widget.user.name,
               ),
-              subtitle: Text(
-                _lastMessage?.msg ?? '',
-                maxLines: 1,
-              ),
+              subtitle: _lastMessageSubtitle,
               trailing: _trailingWidget(),
             );
           },

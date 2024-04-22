@@ -7,7 +7,7 @@ class ChatUser {
   final String id;
   final String lastActive;
   final String email;
-  final String pushToken;
+  String pushToken;
 
   ChatUser({
     required this.image,

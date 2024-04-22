@@ -248,6 +248,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPressed: () async {
               Dialogs.showProgressbar(context);
               signOutCallback() {
+                API.currentUser = null;
                 if (context.mounted) {
                   Navigator.pop(context);
                 }
@@ -260,6 +261,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               }
 
               try {
+                await API.updateActiveStatus(isOnline: false);
                 await API.auth.signOut();
                 await GoogleSignIn().signOut();
                 signOutCallback();
