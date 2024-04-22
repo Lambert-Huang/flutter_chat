@@ -32,6 +32,14 @@ class API {
     if (fcmToken != null) {
       currentUser?.pushToken = fcmToken;
     }
+    // FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    //   debugPrint('Got a message whilst in the foreground!');
+    //   debugPrint('Message data: ${message.data}');
+    //   if (message.notification != null) {
+    //     debugPrint(
+    //         'Message also contained a notification: ${message.notification}');
+    //   }
+    // });
   }
 
   static Future<void> sendPushNotificationTo({
@@ -44,6 +52,10 @@ class API {
         'notification': {
           'title': 'From ${currentUser?.name}',
           'body': msg,
+          'android_channel_id': 'chats',
+        },
+        "data": {
+          "some_data": "User ID: ${currentUser?.id}",
         },
       };
       final response = await post(

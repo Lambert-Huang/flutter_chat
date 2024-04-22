@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat/helper/date_util.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/painting.dart';
 import 'package:flutter/widgets.dart';
 
 import '../api/apis.dart';
@@ -16,11 +17,86 @@ class MessageCard extends StatefulWidget {
 }
 
 class _MessageCardState extends State<MessageCard> {
+  void _showBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+      ),
+      builder: (_) => ListView(
+        shrinkWrap: true,
+        children: [
+          Container(
+            height: 4,
+            margin: EdgeInsets.symmetric(
+              horizontal: mq.width * .4,
+              vertical: mq.height * .015,
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              color: Colors.grey.shade400,
+            ),
+          ),
+          _OptionItem(
+            icon: const Icon(
+              Icons.copy_all_rounded,
+              color: Colors.blue,
+              size: 26,
+            ),
+            name: 'Copy',
+            onTap: () {},
+          ),
+          _OptionItem(
+            icon: const Icon(
+              Icons.edit,
+              color: Colors.blue,
+              size: 26,
+            ),
+            name: 'Edit Message',
+            onTap: () {},
+          ),
+          _OptionItem(
+            icon: const Icon(
+              Icons.delete_forever,
+              color: Colors.red,
+              size: 26,
+            ),
+            name: 'Delete Message',
+            onTap: () {},
+          ),
+          _OptionItem(
+            icon: const Icon(
+              Icons.remove_red_eye,
+              color: Colors.blue,
+              size: 26,
+            ),
+            name: 'Sent At',
+            onTap: () {},
+          ),
+          _OptionItem(
+            icon: const Icon(
+              Icons.remove_red_eye,
+              color: Colors.red,
+              size: 26,
+            ),
+            name: 'Read At',
+            onTap: () {},
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return API.currentUser?.id == widget.message.fromId
-        ? _senderMessage()
-        : _receiverMessage();
+    final isSender = API.currentUser?.id == widget.message.fromId;
+    return InkWell(
+      onLongPress: _showBottomSheet,
+      child: isSender ? _senderMessage() : _receiverMessage(),
+    );
   }
 
   // green bubble
@@ -185,6 +261,44 @@ class _MessageCardState extends State<MessageCard> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _OptionItem extends StatelessWidget {
+  final Icon icon;
+  final String name;
+  final VoidCallback onTap;
+  const _OptionItem(
+      {super.key, required this.icon, required this.name, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: mq.width * .05,
+          top: mq.height * .015,
+          bottom: mq.height * .025,
+        ),
+        child: Row(
+          children: [
+            icon,
+            const SizedBox(
+              width: 8,
+            ),
+            Text(
+              name,
+              style: const TextStyle(
+                fontSize: 15,
+                color: Colors.black54,
+                letterSpacing: .5,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
