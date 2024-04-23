@@ -315,9 +315,8 @@ class _ChatScreenState extends State<ChatScreen> {
               final updateMessages = (snapshot.data?.docs ?? [])
                   .map((e) => Message.fromJson(e.data()))
                   .toList();
-              if (updateMessages.length > _messages.length) {
-                _messages = updateMessages;
-              }
+              _messages.clear();
+              _messages = updateMessages;
               if (_messages.isNotEmpty) {
                 return ListView.builder(
                   reverse: true,

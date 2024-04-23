@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 class DateUtil {
   static String getFormattedTimeString(
@@ -74,5 +75,20 @@ class DateUtil {
     }
     final month = _monthString(time.month);
     return 'Last seen on ${time.day} $month at $formattedTime';
+  }
+
+  static String getMessageTime(
+      {required BuildContext context, required String time}) {
+    final sentAt = DateTime.fromMillisecondsSinceEpoch(int.parse(time));
+    final now = DateTime.now();
+    final formattedTime = TimeOfDay.fromDateTime(sentAt).format(context);
+    if (now.day == sentAt.day &&
+        now.month == sentAt.month &&
+        now.year == sentAt.year) {
+      return formattedTime;
+    }
+    return now.year != sentAt.year
+        ? '$formattedTime - ${sentAt.day} ${_monthString(sentAt.month)} ${sentAt.year}'
+        : '$formattedTime - ${sentAt.day} ${_monthString(sentAt.month)}';
   }
 }

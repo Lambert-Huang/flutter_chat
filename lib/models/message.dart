@@ -6,6 +6,8 @@ class Message {
   final MessageType type;
   final String fromId;
 
+  bool get isTextMessage => type == MessageType.text;
+
   Message({
     required this.toId,
     required this.msg,

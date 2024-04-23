@@ -321,4 +321,18 @@ class API {
       debugPrint('UploadAvatar -->> failed: $e');
     }
   }
+
+  static Future<void> deleteMessage(Message message) async {
+    final conversationId = getConversationID(message.toId);
+    if (conversationId == null) {
+      return;
+    }
+    await fireStore
+        .collection('chats/$conversationId!/messages/')
+        .doc(message.sentAt)
+        .delete();
+    if (message.type == MessageType.image) {
+      await storage.refFromURL(message.msg).delete();
+    }
+  }
 }

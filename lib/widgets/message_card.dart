@@ -1,13 +1,15 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat/helper/date_util.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/painting.dart';
-import 'package:flutter/widgets.dart';
-
+import 'package:flutter/services.dart';
+import 'package:gallery_saver_updated/gallery_saver.dart';
 import '../api/apis.dart';
 import '../main.dart';
 import '../models/message.dart';
+
+extension MessageSendFromSelf on Message {
+  bool get isMessageSendFromSelf => fromId == API.currentUser?.id;
+}
 
 class MessageCard extends StatefulWidget {
   const MessageCard({super.key, required this.message});
@@ -17,6 +19,61 @@ class MessageCard extends StatefulWidget {
 }
 
 class _MessageCardState extends State<MessageCard> {
+  void _showEditMessageDialog() {
+    var updateMsg = widget.message.msg;
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        contentPadding: const EdgeInsets.only(
+          left: 24,
+          right: 24,
+          top: 20,
+          bottom: 10,
+        ),
+        title: const Row(
+          children: [
+            Icon(
+              Icons.message,
+              color: Colors.blue,
+              size: 28,
+            ),
+            Text('Update Message')
+          ],
+        ),
+        content: TextFormField(
+          initialValue: updateMsg,
+          decoration: InputDecoration(
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+          ),
+        ),
+        actions: [
+          MaterialButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.blue, fontSize: 16),
+            ),
+          ),
+          MaterialButton(
+            onPressed: () {},
+            child: const Text(
+              'Update',
+              style: TextStyle(
+                color: Colors.blue,
+                fontSize: 16,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showBottomSheet() {
     showModalBottomSheet(
       context: context,
@@ -41,31 +98,78 @@ class _MessageCardState extends State<MessageCard> {
             ),
           ),
           _OptionItem(
-            icon: const Icon(
-              Icons.copy_all_rounded,
+            icon: Icon(
+              widget.message.isTextMessage
+                  ? Icons.copy_all_rounded
+                  : Icons.download_rounded,
               color: Colors.blue,
               size: 26,
             ),
-            name: 'Copy',
-            onTap: () {},
+            name: widget.message.isTextMessage ? 'Copy Text' : 'Save Image',
+            onTap: () async {
+              if (widget.message.type == MessageType.text) {
+                await Clipboard.setData(
+                  ClipboardData(
+                    text: widget.message.msg,
+                  ),
+                );
+              } else {
+                try {
+                  await GallerySaver.saveImage(
+                    widget.message.msg,
+                    albumName: 'We Chat',
+                  );
+                  debugPrint(
+                    'Save image success: ${widget.message.msg}',
+                  );
+                } catch (e) {
+                  debugPrint('Save image error: $e');
+                }
+              }
+              if (mounted) {
+                Navigator.pop(context);
+              }
+            },
           ),
-          _OptionItem(
-            icon: const Icon(
-              Icons.edit,
-              color: Colors.blue,
-              size: 26,
+          if (widget.message.isMessageSendFromSelf)
+            Divider(
+              color: Colors.black26,
+              endIndent: mq.width * .04,
+              indent: mq.width * .04,
             ),
-            name: 'Edit Message',
-            onTap: () {},
-          ),
-          _OptionItem(
-            icon: const Icon(
-              Icons.delete_forever,
-              color: Colors.red,
-              size: 26,
+          if (widget.message.isTextMessage &&
+              widget.message.isMessageSendFromSelf)
+            _OptionItem(
+              icon: const Icon(
+                Icons.edit,
+                color: Colors.blue,
+                size: 26,
+              ),
+              name: 'Edit Message',
+              onTap: () {
+                Navigator.pop(context);
+                _showEditMessageDialog();
+              },
             ),
-            name: 'Delete Message',
-            onTap: () {},
+          if (widget.message.isMessageSendFromSelf)
+            _OptionItem(
+              icon: const Icon(
+                Icons.delete_forever,
+                color: Colors.red,
+                size: 26,
+              ),
+              name: 'Delete Message',
+              onTap: () async {
+                if (mounted) {
+                  Navigator.pop(context);
+                }
+                await API.deleteMessage(widget.message);
+              },
+            ),
+          Divider(
+            color: Colors.black26,
+            endIndent: mq.width * .04,
+            indent: mq.width * .04,
           ),
           _OptionItem(
             icon: const Icon(
@@ -73,17 +177,24 @@ class _MessageCardState extends State<MessageCard> {
               color: Colors.blue,
               size: 26,
             ),
-            name: 'Sent At',
-            onTap: () {},
+            name: 'Sent At: ${DateUtil.getMessageTime(
+              context: context,
+              time: widget.message.sentAt,
+            )}',
           ),
           _OptionItem(
             icon: const Icon(
               Icons.remove_red_eye,
-              color: Colors.red,
+              color: Colors.green,
               size: 26,
             ),
-            name: 'Read At',
-            onTap: () {},
+            name: (widget.message.isMessageSendFromSelf &&
+                    widget.message.readAt.isNotEmpty)
+                ? 'Read At: ${DateUtil.getMessageTime(
+                    context: context,
+                    time: widget.message.readAt,
+                  )}'
+                : 'Read At: Not seen yet',
           ),
         ],
       ),
@@ -94,6 +205,9 @@ class _MessageCardState extends State<MessageCard> {
   Widget build(BuildContext context) {
     final isSender = API.currentUser?.id == widget.message.fromId;
     return InkWell(
+      onTap: () {
+        FocusScope.of(context).unfocus();
+      },
       onLongPress: _showBottomSheet,
       child: isSender ? _senderMessage() : _receiverMessage(),
     );
@@ -268,9 +382,9 @@ class _MessageCardState extends State<MessageCard> {
 class _OptionItem extends StatelessWidget {
   final Icon icon;
   final String name;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   const _OptionItem(
-      {super.key, required this.icon, required this.name, required this.onTap});
+      {super.key, required this.icon, required this.name, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -280,7 +394,7 @@ class _OptionItem extends StatelessWidget {
         padding: EdgeInsets.only(
           left: mq.width * .05,
           top: mq.height * .015,
-          bottom: mq.height * .025,
+          bottom: mq.height * .01,
         ),
         child: Row(
           children: [
